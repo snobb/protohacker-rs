@@ -1,11 +1,19 @@
-FROM rust:alpine as build-image
-WORKDIR /build
-COPY Cargo.* ./
-COPY ./src ./src
-RUN cargo build --release
+FROM rust:slim-bookworm as build-image
 
-FROM alpine:latest
+ARG TASKDIR
+ARG PKG
+
+COPY ./protohacker-lib ./protohacker-lib
+WORKDIR ./build
+COPY ./${TASKDIR}/Cargo.* ./
+COPY ./${TASKDIR}/src ./src
+# Change the --bin here to the project in question
+RUN cargo build --release --bin ${PKG}
+
+FROM debian:bookworm-slim
+ARG PKG
 WORKDIR /project
-COPY --from=build-image ./build/target/release/protohacker ./
+# Change the binary name project in question
+COPY --from=build-image ./build/target/release/${PKG} ./prog
 EXPOSE 8080 5000/udp
-CMD [ "./protohacker" ]
+CMD [ "./prog" ]

@@ -3,12 +3,5 @@
 version = 3
 
 [[package]]
-name = "protohacker-lib"
+name = "protohacker"
 version = "0.1.0"
-
-[[package]]
-name = "protohacker00"
-version = "0.1.0"
-dependencies = [
- "protohacker-lib",
-]

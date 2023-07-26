@@ -1,7 +1,10 @@
 use std::io::{Read, Write};
+use std::net::TcpStream;
 
-pub fn handle(mut stream: impl Read + Write) {
+pub fn handle(addr: &str, mut stream: Box<TcpStream>) {
     let mut buf = [0; 2048];
+
+    println!("Handling request from {addr}");
 
     loop {
         match stream.read(&mut buf) {
