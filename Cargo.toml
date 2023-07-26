@@ -1,4 +1,5 @@
 [workspace]
 members = [
     "00-smoke-test",
+    "01-prime-time",
 ]
