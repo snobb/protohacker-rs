@@ -1,4 +1,5 @@
 use std::io;
+use std::marker::Send;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 
@@ -11,16 +12,23 @@ impl TcpServer {
         TcpServer { connstr }
     }
 
-    pub fn listen(&self, handler: fn(addr: &str, Box<TcpStream>)) -> io::Result<()> {
+    pub fn listen<F>(&self, handler: F) -> io::Result<()>
+    where
+        F: Fn(&str, Box<TcpStream>),
+        F: Clone,
+        F: Send + 'static,
+    {
         let listener = TcpListener::bind(&self.connstr)?;
+
         println!("listening on: {}", self.connstr);
 
         loop {
             let (stream, addr) = listener.accept()?;
             println!("{addr} :: Connect");
+            let handler_fn = handler.clone();
 
             thread::spawn(move || {
-                handler(&addr.to_string(), Box::new(stream));
+                handler_fn(&addr.to_string(), Box::new(stream));
                 println!("{addr} :: Disconnect");
             });
         }

@@ -1,6 +1,9 @@
 [workspace]
+workspace.resolver = "2"
+
 members = [
     "00-smoke-test",
     "01-prime-time",
     "02-means-to-an-end",
+    "03-budget-chat",
 ]
