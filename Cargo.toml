@@ -7,4 +7,5 @@ members = [
     "02-means-to-an-end",
     "03-budget-chat",
     "04-unusual-db",
+    "05-mob-in-the-middle",
 ]
