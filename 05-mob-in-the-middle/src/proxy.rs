@@ -57,20 +57,24 @@ impl Proxy {
         reader: io::BufReader<Box<TcpStream>>,
         mut writer: TcpStream,
     ) {
-        for line in reader.lines() {
+        let mut lines = reader.lines();
+
+        loop {
             if let Ok(is_close) = rx.try_recv() {
                 if is_close {
                     break;
                 }
             }
 
-            let line = match line {
-                Ok(line) => line,
-                Err(err) => {
+            let line = match lines.next() {
+                Some(Ok(line)) => line,
+                Some(Err(err)) => {
                     println!("{}: Error: {}", addr, err);
                     break;
                 }
+                None => break,
             };
+
             println!("{}", line);
 
             let mut tokens: Vec<String> = Vec::new();
