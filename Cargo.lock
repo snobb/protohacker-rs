@@ -79,6 +79,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "protohacker06"
+version = "0.1.0"
+dependencies = [
+ "protohacker-lib",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
