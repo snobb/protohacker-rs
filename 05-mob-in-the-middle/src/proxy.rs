@@ -1,6 +1,7 @@
 use std::env;
 use std::io::{self, BufRead, Write};
-use std::net::TcpStream;
+use std::net::{Shutdown, TcpStream};
+use std::str;
 use std::sync::{mpsc, mpsc::Receiver, mpsc::Sender};
 use std::thread;
 
@@ -33,6 +34,7 @@ impl Proxy {
                 return Err(e);
             }
         };
+        println!("connected to backend");
 
         let be_writer = be.try_clone().expect("Cannot clone be stream");
         let be_reader = io::BufReader::new(Box::new(be));
@@ -54,11 +56,10 @@ impl Proxy {
         addr: String,
         rx: Receiver<bool>,
         tx: Sender<bool>,
-        reader: io::BufReader<Box<TcpStream>>,
+        mut reader: io::BufReader<Box<TcpStream>>,
         mut writer: TcpStream,
     ) {
-        let mut lines = reader.lines();
-
+        let mut buf = String::new();
         loop {
             if let Ok(is_close) = rx.try_recv() {
                 if is_close {
@@ -66,16 +67,20 @@ impl Proxy {
                 }
             }
 
-            let line = match lines.next() {
-                Some(Ok(line)) => line,
-                Some(Err(err)) => {
-                    println!("{}: Error: {}", addr, err);
+            let line = match reader.read_line(&mut buf) {
+                Ok(0) => break,
+                Ok(sz) => buf[..sz].to_string(),
+                Err(e) => {
+                    println!("{}: Error: {}", addr, e);
                     break;
                 }
-                None => break,
             };
 
-            println!("{}", line);
+            if !buf.ends_with("\n") {
+                continue;
+            }
+
+            print!("{}", line);
 
             let mut tokens: Vec<String> = Vec::new();
             for token in line.split_whitespace() {
@@ -86,10 +91,13 @@ impl Proxy {
                 }
             }
 
-            _ = writer.write(&tokens.join(" ").into_bytes());
-            _ = writer.write("\n".as_bytes());
+            _ = writer.write_all(&tokens.join(" ").into_bytes());
+            _ = writer.write_all("\n".as_bytes());
+
+            buf.clear();
         }
 
+        _ = writer.shutdown(Shutdown::Both);
         _ = tx.send(true);
     }
 
